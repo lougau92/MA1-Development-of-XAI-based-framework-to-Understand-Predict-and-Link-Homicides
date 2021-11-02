@@ -32,6 +32,7 @@ def feature_cleaning(df):
 # handling some data values inconsistencies
 def values_cleaning(df):
     df = df.copy()
+    
 
     df['OffAge'].replace(999, np.NaN, inplace=True) # replacing 999 ages with Nan
     df = df[df["Agentype"]!='4'] # removing 4 4s typo?
