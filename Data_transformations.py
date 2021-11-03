@@ -1,3 +1,6 @@
+import numpy as np
+import pandas as pd
+
 # removing obvious redundant or useless features
 def feature_cleaning(df):
     df = df.copy()
