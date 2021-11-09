@@ -1,0 +1,6 @@
+/.idea
+/.vscode
+/Murder_Data
+*.pyc
+
+.ipynb_checkpoints
