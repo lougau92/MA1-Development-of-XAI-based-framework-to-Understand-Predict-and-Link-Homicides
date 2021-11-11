@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
-from typing import List
+from typing import List, Optional
 plt.style.use("seaborn")
 
 def p_of_chi_squared(feature_1: pd.Series, feature_2: pd.Series) -> float:
