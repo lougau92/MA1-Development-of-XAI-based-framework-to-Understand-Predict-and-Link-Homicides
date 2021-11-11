@@ -2,6 +2,7 @@ import numpy as np
 from numpy.core.numeric import indices
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.metrics import mutual_info_score
 import seaborn as sns
 from scipy import stats
 from typing import List, Optional
@@ -70,6 +71,23 @@ def heatmap_chi(data: pd.DataFrame, return_df: bool = False, figsize: tuple = (3
     plt.figure(figsize=figsize)
     heat_map = sns.heatmap(df, linewidth = 1 , robust = True, annot = True)
     plt.title("p_values of Chi-Squared test for independence")
+    plt.show()
+    if return_df:
+        return df
+
+def heatmap_mutual_info(data: pd.DataFrame, return_df: bool = False, figsize: tuple = (30, 30)) -> Optional[pd.DataFrame]:
+    num_features = len(data.columns)
+    mutual_info_scores = np.zeros(shape=(num_features, num_features))
+    for i in range(num_features):
+        for j in range(i, len(data.columns)):
+            mutual_info = mutual_info_score(data.iloc[:, i], data.iloc[:, j])
+            mutual_info_scores[i][j] = mutual_info
+            mutual_info_scores[j][i] = mutual_info
+
+    df = pd.DataFrame(mutual_info_score, index=data.columns, columns=data.columns)
+    plt.figure(figsize=figsize)
+    heat_map = sns.heatmap(df, linewidth = 1 , robust = True, annot = True)
+    plt.title("Mutual Information scores")
     plt.show()
     if return_df:
         return df
