@@ -57,7 +57,19 @@ def p_values_chi(data: pd.DataFrame) -> pd.DataFrame:
             p_values[j][i] = p
     return pd.DataFrame(p_values, index=data.columns, columns=data.columns)
 
-def heatmap_important_features(data: pd.DataFrame, important_features: List[str]) -> None:
-    indices = []
-    for feature in important_features:
-        indices.append(data.columns.index(feature))
+def heatmap_chi(data: pd.DataFrame, return_df: bool = False, figsize: tuple = (30, 30)) -> Optional[pd.DataFrame]:
+    num_features = len(data.columns)
+    p_values = np.zeros(shape=(num_features, num_features))
+    for i in range(num_features):
+        for j in range(i, len(data.columns)):
+            p = p_of_chi_squared(data.iloc[:, i], data.iloc[:, j])
+            p_values[i][j] = p
+            p_values[j][i] = p
+
+    df = pd.DataFrame(p_values, index=data.columns, columns=data.columns)
+    plt.figure(figsize=figsize)
+    heat_map = sns.heatmap(df, linewidth = 1 , robust = True, annot = True)
+    plt.title("p_values of Chi-Squared test for independence")
+    plt.show()
+    if return_df:
+        return df
