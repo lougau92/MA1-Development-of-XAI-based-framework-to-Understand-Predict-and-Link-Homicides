@@ -1,8 +1,11 @@
 import numpy as np
+from numpy.core.numeric import indices
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 from scipy import stats
 from typing import List
+plt.style.use("seaborn")
 
 def p_of_chi_squared(feature_1: pd.Series, feature_2: pd.Series) -> float:
     """Performs the chi-squared test of independence between the two passed features, returns the p-value
@@ -43,4 +46,18 @@ def find_dependent_chi(data: pd.DataFrame, significance_level: float) -> pd.Data
     insignificants = df[df['p-value'] > significance_level].index
     df.drop(insignificants, inplace=True)
     return df.sort_values(by='p-value')
-    
+
+def p_values_chi(data: pd.DataFrame) -> pd.DataFrame:
+    num_features = len(data.columns)
+    p_values = np.zeros(shape=(num_features, num_features))
+    for i in range(num_features):
+        for j in range(i, len(data.columns)):
+            p = p_of_chi_squared(data.iloc[:, i], data.iloc[:, j])
+            p_values[i][j] = p
+            p_values[j][i] = p
+    return pd.DataFrame(p_values, index=data.columns, columns=data.columns)
+
+def heatmap_important_features(data: pd.DataFrame, important_features: List[str]) -> None:
+    indices = []
+    for feature in important_features:
+        indices.append(data.columns.index(feature))
