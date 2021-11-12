@@ -5,11 +5,13 @@ import pandas as pd
 def clean_dataframe(df):
     data = df.copy(deep=True)
     solved, unsolved = split_solved(data)
-    data = fill_unknown(solved)
-    data = remove_col(data, ['StateName', 'Situation', 'Incident'])
+    data = remove_col(solved, ['Situation', 'Incident', 'Ori', 'StateName'])
+    data = fill_unknown(data)
     data = delete_val(data, ['OffSex', 'OffRace', 'VicSex', 'VicRace'], ['Unknown', 'Unknown', 'Unknown', 'Unknown'])
     data = clean_unk(data)
     data = del_agentype(data, 'Agentype')
+    data = split_filedate(data)
+    data = split_county_area(data)
     return data
 
 
@@ -56,12 +58,36 @@ def del_agentype(df, col):
 
 # Split the FileDate column into three columns (TO BE FINISHED)
 def split_col(df):
-    #     df[['FileMonth', 'FileDay', 'FileYear']] = df['AB'].str.split(' ', 1, expand=True)
-    #     df['FileDate'] = df['FileDate'].astype(int)
-    #     df['FileDate'] = df['FileDate'].astype(str)
-    df.insert(1, 'File Year', df['FileDate' != 'Unknown'].map(lambda x: x[len(x) - 2:len(x)]), True)
-    df.insert(1, 'File Day', df['FileDate'].map(lambda x: x[len(x) - 4:len(x) - 2]), True)
-    df.insert(1, 'File Month', df['FileDate'].map(lambda x: x[0:len(x) - 4]), True)
-    #df.loc[nan_indexes, "File Year"] = np.NaN
-    #df.loc[nan_indexes, "File Day"] = np.NaN
-    #df.loc[nan_indexes, "File Month"] = np.NaN
+    df['FileDate'] = df['FileDate'].astype(str)
+    df.insert(1, 'FileYear', df['FileDate'].map(lambda x : x[len(x)-4:len(x)-2]), True)
+    df.insert(1, 'FileDay', df['FileDate'].map(lambda x : x[len(x)-6:len(x)-4]), True)
+    df.insert(1, 'FileMonth', df['FileDate'].map(lambda x : x[0:len(x)-6]), True)
+    df['FileYear'] = df['FileYear'].astype(str)
+    df['FileMonth'] = df['FileMonth'].astype(str)
+    df['FileDay'] = df['FileDay'].astype(str)
+    df = df.drop(['FileDate'], axis=1)
+    return df
+
+# Converts all string values to numeric values (integer refering to a specific value)
+def to_numeric(df):
+    df = df.copy()
+    df_numeric = df.copy()
+
+    for col in df.columns:
+      # if(col in ['File Month','File Year','File Day']):
+      #   df_numeric[col] = pd.to_numeric(df[col])
+      #   print(col)
+        if df[col].dtype == 'object':
+            labels = df_numeric[col].unique().tolist()
+            mapping = dict( zip(labels,range(len(labels))) )
+            df_numeric.replace({col: mapping},inplace=True)
+
+    return df_numeric
+
+# Split CNTYFIPS and MSA columns into County and Area
+def split_county_area(df):
+    df.insert(0, 'County', df['CNTYFIPS'].map(lambda x : str(x).split(',')[0]), True)
+    df.insert(0, 'Area',df['MSA'].map(lambda x :  str(x).split(',')[0] ) ,True)
+    df = df.drop(['CNTYFIPS'], axis=1)
+    df = df.drop(['MSA'], axis=1)
+    return df
