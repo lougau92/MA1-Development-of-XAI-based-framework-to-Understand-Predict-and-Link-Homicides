@@ -91,3 +91,15 @@ def split_county_area(df):
     df = df.drop(['CNTYFIPS'], axis=1)
     df = df.drop(['MSA'], axis=1)
     return df
+
+# Split the FileDate column into three columns
+def split_filedate(df):
+    df['FileDate'] = df['FileDate'].astype(str)
+    df.insert(0, 'FileYear', df['FileDate'].map(lambda x : x[len(x)-4:len(x)-2]), True)
+    df.insert(0, 'FileDay', df['FileDate'].map(lambda x : x[len(x)-6:len(x)-4]), True)
+    df.insert(0, 'FileMonth', df['FileDate'].map(lambda x : x[0:len(x)-6]), True)
+    df['FileYear'] = df['FileYear'].astype(str)
+    df['FileMonth'] = df['FileMonth'].astype(str)
+    df['FileDay'] = df['FileDay'].astype(str)
+    df = df.drop(['FileDate'], axis=1)
+    return df
