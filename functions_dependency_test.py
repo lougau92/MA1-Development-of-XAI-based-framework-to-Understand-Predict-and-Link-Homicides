@@ -66,11 +66,10 @@ def heatmap_chi(data: pd.DataFrame, return_df: bool = False, figsize: tuple = (3
             p_values[i][j] = p
             p_values[j][i] = p
 
-    fig = px.imshow(data,
+    fig = px.imshow(p_values,
                     labels=dict(color="p-value"),
                     x=data.columns,
-                    y=data.columns,
-                    z=p_values
+                    y=data.columns
                 )
     #fig.update_xaxes(side="top")
     fig.show()
