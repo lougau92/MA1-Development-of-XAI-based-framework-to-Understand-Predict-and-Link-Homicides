@@ -1,12 +1,11 @@
 import numpy as np
 from numpy.core.numeric import indices
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.express as px
 from sklearn.metrics import mutual_info_score
 import seaborn as sns
 from scipy import stats
 from typing import List, Optional
-plt.style.use("seaborn")
 
 def p_of_chi_squared(feature_1: pd.Series, feature_2: pd.Series) -> float:
     """Performs the chi-squared test of independence between the two passed features, returns the p-value
@@ -67,13 +66,21 @@ def heatmap_chi(data: pd.DataFrame, return_df: bool = False, figsize: tuple = (3
             p_values[i][j] = p
             p_values[j][i] = p
 
-    df = pd.DataFrame(p_values, index=data.columns, columns=data.columns)
-    plt.figure(figsize=figsize)
-    heat_map = sns.heatmap(df, linewidth = 1 , robust = True, annot = True)
-    plt.title("p_values of Chi-Squared test for independence")
-    plt.show()
+    fig = px.imshow(data,
+                    labels=dict(color="p-value"),
+                    x=data.columns,
+                    y=data.columns,
+                    z=p_values
+                )
+    #fig.update_xaxes(side="top")
+    fig.show()
+
+    #plt.figure(figsize=figsize)
+    #heat_map = sns.heatmap(df, linewidth = 1 , robust = True, annot = True)
+    #plt.title("p_values of Chi-Squared test for independence")
+    #plt.show()
     if return_df:
-        return df
+        return pd.DataFrame(p_values, index=data.columns, columns=data.columns)
 
 def heatmap_mutual_info(data: pd.DataFrame, return_df: bool = False, figsize: tuple = (30, 30)) -> Optional[pd.DataFrame]:
     num_features = len(data.columns)
@@ -84,10 +91,18 @@ def heatmap_mutual_info(data: pd.DataFrame, return_df: bool = False, figsize: tu
             mutual_info_scores[i][j] = mutual_info
             mutual_info_scores[j][i] = mutual_info
 
-    df = pd.DataFrame(mutual_info_score, index=data.columns, columns=data.columns)
-    plt.figure(figsize=figsize)
-    heat_map = sns.heatmap(df, linewidth = 1 , robust = True, annot = True)
-    plt.title("Mutual Information scores")
-    plt.show()
+    fig = px.imshow(data,
+                    labels=dict(color="p-value"),
+                    x=data.columns,
+                    y=data.columns,
+                    z=mutual_info_scores
+                )
+    #fig.update_xaxes(side="top")
+    fig.show()
+
+    #plt.figure(figsize=figsize)
+    #heat_map = sns.heatmap(df, linewidth = 1 , robust = True, annot = True)
+    #plt.title("Mutual Information scores")
+    #plt.show()
     if return_df:
-        return df
+        return pd.DataFrame(mutual_info_score, index=data.columns, columns=data.columns)
