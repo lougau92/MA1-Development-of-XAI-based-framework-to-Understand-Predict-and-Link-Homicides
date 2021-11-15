@@ -1,8 +1,8 @@
 import numpy as np
 from numpy.core.numeric import indices
 import pandas as pd
-import plotly.express as px
-from sklearn.metrics import mutual_info_score
+import plotly.figure_factory as ff
+from sklearn.metrics import normalized_mutual_info_score
 import seaborn as sns
 from scipy import stats
 from typing import List, Optional
@@ -66,18 +66,19 @@ def heatmap_chi(data: pd.DataFrame, return_df: bool = False, figsize: tuple = (3
             p_values[i][j] = p
             p_values[j][i] = p
 
-    fig = px.imshow(p_values,
-                    labels=dict(color="p-value"),
-                    x=data.columns,
-                    y=data.columns
-                )
-    #fig.update_xaxes(side="top")
+    p_rounded = np.around(p_values, decimals=4)
+    fig = ff.create_annotated_heatmap(p_values, 
+                                        x=data.columns.tolist(), 
+                                        y=data.columns.tolist(),
+                                        annotation_text=p_rounded)
+    fig.update_xaxes(side="top")
+    fig.update_layout( title_text='p_values of Chi-Squared test for independence',
+                        autosize=False,
+                        width=2000,
+                        height=2000
+                        )
     fig.show()
 
-    #plt.figure(figsize=figsize)
-    #heat_map = sns.heatmap(df, linewidth = 1 , robust = True, annot = True)
-    #plt.title("p_values of Chi-Squared test for independence")
-    #plt.show()
     if return_df:
         return pd.DataFrame(p_values, index=data.columns, columns=data.columns)
 
@@ -86,17 +87,22 @@ def heatmap_mutual_info(data: pd.DataFrame, return_df: bool = False, figsize: tu
     mutual_info_scores = np.zeros(shape=(num_features, num_features))
     for i in range(num_features):
         for j in range(i, len(data.columns)):
-            mutual_info = mutual_info_score(data.iloc[:, i], data.iloc[:, j])
+            mutual_info = normalized_mutual_info_score(data.iloc[:, i], data.iloc[:, j])
             mutual_info_scores[i][j] = mutual_info
             mutual_info_scores[j][i] = mutual_info
 
-    fig = px.imshow(data,
-                    labels=dict(color="p-value"),
-                    x=data.columns,
-                    y=data.columns,
-                    z=mutual_info_scores
+    mi_rounded = np.around(mutual_info_scores, decimals=4)
+    fig = ff.create_annotated_heatmap(mutual_info_scores,
+                    x=data.columns.tolist(),
+                    y=data.columns.tolist(),
+                    annotation_text=mi_rounded
                 )
     #fig.update_xaxes(side="top")
+    fig.update_layout( title_text='Mutual Information scores',
+                        autosize=False,
+                        width=2000,
+                        height=2000
+                        )
     fig.show()
 
     #plt.figure(figsize=figsize)
@@ -104,4 +110,4 @@ def heatmap_mutual_info(data: pd.DataFrame, return_df: bool = False, figsize: tu
     #plt.title("Mutual Information scores")
     #plt.show()
     if return_df:
-        return pd.DataFrame(mutual_info_score, index=data.columns, columns=data.columns)
+        return pd.DataFrame(mutual_info_scores, index=data.columns, columns=data.columns)
