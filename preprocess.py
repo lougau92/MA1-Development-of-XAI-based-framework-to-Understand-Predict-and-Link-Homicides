@@ -103,3 +103,21 @@ def split_filedate(df):
     df['FileDay'] = df['FileDay'].astype(str)
     df = df.drop(['FileDate'], axis=1)
     return df
+
+# Devide the dataset into two different dataframes representing the input and output features
+def split_input_from_output(data, input_columns, output_columns):
+    indices = []
+    for column in input_columns:
+        indices.append(data.columns.get_loc(column))
+    input_data = data.iloc[:,np.asarray(indices)]
+    indices = []
+    for column in output_columns:
+        indices.append(data.columns.get_loc(column))
+    output_data = data.iloc[:,np.asarray(indices)]
+    return input_data, output_data
+
+# Example of how to get the datasets with in- and output features (including the current interpretation)
+def get_current_input_and_output(data):
+    input_columns = ['CNTYFIPS', 'State', 'Agency', 'Agentype', 'Homicide', 'VicAge', 'VicSex', 'VicRace', 'VicEthnic', 'Weapon', 'Subcircum', 'VicCount', 'MSA', 'Circumstance']
+    output_columns = ['OffAge', 'OffSex', 'OffRace', 'OffEthnic', 'Relationship', 'OffCount']
+    return split_input_from_output(data, input_columns, output_columns)
