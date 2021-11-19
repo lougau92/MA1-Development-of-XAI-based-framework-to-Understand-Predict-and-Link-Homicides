@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-
+from zipfile import ZipFile
 
 def clean_dataframe(df):
     data = df.copy(deep=True)
@@ -57,7 +57,7 @@ def del_agentype(df, col):
 
 
 # Split the FileDate column into three columns (TO BE FINISHED)
-def split_col(df):
+def split_filedate(df):
     df['FileDate'] = df['FileDate'].astype(str)
     df.insert(1, 'FileYear', df['FileDate'].map(lambda x : x[len(x)-4:len(x)-2]), True)
     df.insert(1, 'FileDay', df['FileDate'].map(lambda x : x[len(x)-6:len(x)-4]), True)
@@ -91,6 +91,14 @@ def split_county_area(df):
     df = df.drop(['CNTYFIPS'], axis=1)
     df = df.drop(['MSA'], axis=1)
     return df
+
+# with ZipFile('Murder_Data.zip', 'r') as zipObj:
+#    # Extract all the contents of zip file in current directory
+#    zipObj.extractall()
+#
+# df = pd.read_csv("SHR76_20.csv")
+# new_df = clean_dataframe(df)
+# print(new_df)
 
 # Split the FileDate column into three columns
 def split_filedate(df):
