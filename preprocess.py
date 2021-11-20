@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
+import itertools
 from zipfile import ZipFile
+from sklearn.model_selection import train_test_split
 
 def clean_dataframe(df):
     data = df.copy(deep=True)
@@ -68,6 +70,7 @@ def split_filedate(df):
     df = df.drop(['FileDate'], axis=1)
     return df
 
+
 # Converts all string values to numeric values (integer refering to a specific value)
 def to_numeric(df):
     df = df.copy()
@@ -84,6 +87,7 @@ def to_numeric(df):
 
     return df_numeric
 
+
 # Split CNTYFIPS and MSA columns into County and Area
 def split_county_area(df):
     df.insert(0, 'County', df['CNTYFIPS'].map(lambda x : str(x).split(',')[0]), True)
@@ -92,13 +96,6 @@ def split_county_area(df):
     df = df.drop(['MSA'], axis=1)
     return df
 
-# with ZipFile('Murder_Data.zip', 'r') as zipObj:
-#    # Extract all the contents of zip file in current directory
-#    zipObj.extractall()
-#
-# df = pd.read_csv("SHR76_20.csv")
-# new_df = clean_dataframe(df)
-# print(new_df)
 
 # Split the FileDate column into three columns
 def split_filedate(df):
@@ -112,6 +109,7 @@ def split_filedate(df):
     df = df.drop(['FileDate'], axis=1)
     return df
 
+
 # Devide the dataset into two different dataframes representing the input and output features
 def split_input_from_output(data, input_columns, output_columns):
     indices = []
@@ -124,8 +122,26 @@ def split_input_from_output(data, input_columns, output_columns):
     output_data = data.iloc[:,np.asarray(indices)]
     return input_data, output_data
 
+
 # Example of how to get the datasets with in- and output features (including the current interpretation)
 def get_current_input_and_output(data):
     input_columns = ['CNTYFIPS', 'State', 'Agency', 'Agentype', 'Homicide', 'VicAge', 'VicSex', 'VicRace', 'VicEthnic', 'Weapon', 'Subcircum', 'VicCount', 'MSA', 'Circumstance']
     output_columns = ['OffAge', 'OffSex', 'OffRace', 'OffEthnic', 'Relationship', 'OffCount']
     return split_input_from_output(data, input_columns, output_columns)
+
+
+# Split dataframe into small train and test set, stratified on cols
+def split_stratify(df, cols, train_frac, test_frac):
+    # Get unique combinations of columns
+    unique_vals = [np.unique(df[[col]].values) for col in cols]
+    combinations = list(itertools.product(*unique_vals))
+
+    # Create df for each combination and sample non-random from df
+    train, test = [], []
+    for combi in combinations:
+        binned_df = df.loc[(df[cols[0]] == combi[0]) & (df[cols[1]] == combi[1]) & (df[cols[2]] == combi[2])]
+        train.append(binned_df.sample(frac=train_frac, replace=True, random_state=1))
+        test.append(binned_df.sample(frac=test_frac, replace=True, random_state=1))
+
+    # Return training df and test df
+    return pd.concat(train, ignore_index=True), pd.concat(test, ignore_index=True)
