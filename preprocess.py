@@ -3,6 +3,8 @@ import pandas as pd
 import itertools
 from zipfile import ZipFile
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OrdinalEncoder
+from typing import List
 
 def clean_dataframe(df):
     data = df.copy(deep=True)
@@ -72,20 +74,24 @@ def split_filedate(df):
 
 
 # Converts all string values to numeric values (integer refering to a specific value)
-def to_numeric(df):
-    df = df.copy()
+def to_numeric(df, use_ordinal_encoder: bool = False, non_numeric_features: List[str] = []):
     df_numeric = df.copy()
+    if not use_ordinal_encoder:
 
-    for col in df.columns:
-      # if(col in ['File Month','File Year','File Day']):
-      #   df_numeric[col] = pd.to_numeric(df[col])
-      #   print(col)
-        if df[col].dtype == 'object':
-            labels = df_numeric[col].unique().tolist()
-            mapping = dict( zip(labels,range(len(labels))) )
-            df_numeric.replace({col: mapping},inplace=True)
+        for col in df.columns:
+        # if(col in ['File Month','File Year','File Day']):
+        #   df_numeric[col] = pd.to_numeric(df[col])
+        #   print(col)
+            if df[col].dtype == 'object':
+                labels = df_numeric[col].unique().tolist()
+                mapping = dict(zip(labels,range(len(labels))))
+                df_numeric.replace({col: mapping},inplace=True)
 
-    return df_numeric
+        return df_numeric
+    else:
+        encoder = OrdinalEncoder()
+        df_numeric[non_numeric_features] = pd.DataFrame(encoder.fit_transform(df_numeric[non_numeric_features]), columns=non_numeric_features)
+        return df, encoder
 
 
 # Split CNTYFIPS and MSA columns into County and Area
@@ -145,3 +151,18 @@ def split_stratify(df, cols, train_frac, test_frac):
 
     # Return training df and test df
     return pd.concat(train, ignore_index=True), pd.concat(test, ignore_index=True)
+
+# generate column that has binned age values
+def bin_age(df, age_col_name):
+    bins = [0,2,14,18,22,30,40,50,60,70,80,100]
+    labels = ['0-2','3-14', '15-18', '19-22', '23-30', '30s','40s','50s','60s','70s','80+']
+    try:
+        # cannot cut the df if age_col contains non-numeric dtypes
+        binned_series = pd.cut(df[age_col_name], bins = bins, labels = labels)
+    except TypeError:
+        # replace 'Unkown' entries with age of 999
+        bins = [0,2,14,18,22,30,40,50,60,70,80,100,1000]
+        labels = ['0-2','3-14', '15-18', '19-22', '23-30', '30s','40s','50s','60s','70s','80+', 'Unknown']
+        df[age_col_name].replace(to_replace='Unknown', value = 999, inplace = True)
+        binned_series = pd.cut(df[age_col_name], bins = bins, labels = labels)
+    return binned_series.astype(str)
