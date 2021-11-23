@@ -77,20 +77,16 @@ def split_filedate(df):
 def to_numeric(df, use_ordinal_encoder: bool = False, non_numeric_features: List[str] = []):
     df_numeric = df.copy()
     if not use_ordinal_encoder:
-
         for col in df.columns:
-        # if(col in ['File Month','File Year','File Day']):
-        #   df_numeric[col] = pd.to_numeric(df[col])
-        #   print(col)
             if df[col].dtype == 'object':
                 labels = df_numeric[col].unique().tolist()
                 mapping = dict(zip(labels,range(len(labels))))
                 df_numeric.replace({col: mapping},inplace=True)
-
         return df_numeric
     else:
         encoder = OrdinalEncoder()
-        df_numeric[non_numeric_features] = pd.DataFrame(encoder.fit_transform(df_numeric[non_numeric_features]), columns=non_numeric_features)
+        encoder.fit(df[non_numeric_features])
+        df[non_numeric_features] = encoder.transform(df[non_numeric_features])    
         return df, encoder
 
 
