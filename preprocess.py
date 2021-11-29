@@ -78,7 +78,7 @@ def to_numeric(df, use_ordinal_encoder: bool = False, non_numeric_features: List
     df_numeric = df.copy()
     if not use_ordinal_encoder:
         for col in df_numeric.columns:
-            if df_numeric[cja ol].dtype == 'object':
+            if df_numeric[col].dtype == 'object':
                 labels = df_numeric[col].unique().tolist()
                 mapping = dict(zip(labels,range(len(labels))))
                 df_numeric.replace({col: mapping},inplace=True)
@@ -141,9 +141,15 @@ def split_stratify(df, cols, train_frac, test_frac):
     # Create df for each combination and sample non-random from df
     train, test = [], []
     for combi in combinations:
-        binned_df = df.loc[(df[cols[0]] == combi[0]) & (df[cols[1]] == combi[1]) & (df[cols[2]] == combi[2]) & (df[cols[3]] == combi[3])]
-        train.append(binned_df.sample(frac=train_frac, replace=True, random_state=1))
-        test.append(binned_df.sample(frac=test_frac, replace=True, random_state=1))
+        try:
+            binned_df = df.loc[(df[cols[0]] == combi[0]) & (df[cols[1]] == combi[1]) & (df[cols[2]] == combi[2])]
+            train_sub,test_sub = train_test_split(binned_df,test_size=test_frac,train_size=train_frac,random_state=1)
+            train.append(train_sub)
+            test.append(test_sub)
+        except:
+            pass
+        #train.append(binned_df.sample(frac=train_frac, replace=True, random_state=1))
+        #test.append(binned_df.sample(frac=test_frac, replace=True, random_state=1))
 
     # Return training df and test df
     return pd.concat(train, ignore_index=True), pd.concat(test, ignore_index=True)
