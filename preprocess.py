@@ -169,3 +169,12 @@ def bin_age(data, age_col_name):
         df[age_col_name].replace(to_replace='Unknown', value = 999, inplace = True)
         binned_series = pd.cut(df[age_col_name], bins = bins, labels = labels)
     return binned_series.astype('string', copy=False)
+
+# other binning function
+def bin_age2(data, age_col_name):
+    df = data.copy()
+    bins = [-1,2,14,18,22,30,40,50,60,70,80,100,1000]
+    labels = ['0-2','3-14', '15-18', '19-22', '23-30', '30s','40s','50s','60s','70s','80+','999']
+    df[age_col_name].replace(to_replace='Unknown', value = 999, inplace = True)
+    binned_series = pd.cut(df[age_col_name], bins = bins, labels = labels)
+    return binned_series.astype('string', copy=False)
