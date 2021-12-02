@@ -86,7 +86,7 @@ def heatmap_mutual_info(data: pd.DataFrame, return_df: bool = False, figsize: tu
     num_features = len(data.columns)
     mutual_info_scores = np.zeros(shape=(num_features, num_features))
     for i in range(num_features):
-        for j in range(i, len(data.columns)):
+        for j in range(i, num_features):
             mutual_info = normalized_mutual_info_score(data.iloc[:, i], data.iloc[:, j])
             mutual_info_scores[i][j] = mutual_info
             mutual_info_scores[j][i] = mutual_info
@@ -105,9 +105,5 @@ def heatmap_mutual_info(data: pd.DataFrame, return_df: bool = False, figsize: tu
                         )
     fig.show()
 
-    #plt.figure(figsize=figsize)
-    #heat_map = sns.heatmap(df, linewidth = 1 , robust = True, annot = True)
-    #plt.title("Mutual Information scores")
-    #plt.show()
     if return_df:
         return pd.DataFrame(mutual_info_scores, index=data.columns, columns=data.columns)
