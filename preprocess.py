@@ -154,6 +154,15 @@ def split_stratify(df, cols, train_frac, test_frac):
     # Return training df and test df
     return pd.concat(train, ignore_index=True), pd.concat(test, ignore_index=True)
 
+def get_train_test_val(df,cols,prop=0.20,train_prop=0.7,test_prop=0.25,val_prop=0.05):
+    cleaned_data, _ = split_stratify(df, cols, prop, 1-prop)
+    # get 75% for training (of subset)
+    cleaned_train, cleaned_rest = split_stratify(cleaned_data, cols, train_prop, test_prop+val_prop)
+    # get 83% for testing (results in 25% test and 5% val)
+    cleaned_test, cleaned_val = split_stratify(cleaned_rest, cols, test_prop/(test_prop+val_prop), val_prop/(test_prop+val_prop))
+
+    return cleaned_train,cleaned_test,cleaned_val
+
 # generate column that has binned age values
 def bin_age(data, age_col_name):
     df = data.copy()
