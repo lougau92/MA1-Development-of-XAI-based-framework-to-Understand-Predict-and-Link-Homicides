@@ -10,7 +10,7 @@ cleaned_data = clean_dataframe(raw_data)
 #train,test = split_stratify(...)
 #get subset of 20% of total data
 
-cleaned_train,cleaned_test,cleaned_val = get_train_test_val(cleaned_data,['OffSex', 'OffRace', 'OffEthnic'])
+cleaned_data,cleaned_train,cleaned_test,cleaned_val = get_train_test_val(cleaned_data,['OffSex', 'OffRace', 'OffEthnic'])
 
 print(cleaned_data.shape)
 print(cleaned_train.shape)
