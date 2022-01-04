@@ -74,9 +74,9 @@ def split_filedate(df):
 
 
 # Converts all string values to numeric values (integer refering to a specific value)
-def to_numeric(df, use_ordinal_encoder: bool = False, non_numeric_features: List[str] = []):
+def to_numeric(df, ordinal_encoder: OrdinalEncoder = None, fit_encoder: bool = False, non_numeric_features: List[str] = []):
     df_numeric = df.copy()
-    if not use_ordinal_encoder:
+    if ordinal_encoder is None:
         for col in df_numeric.columns:
             if df_numeric[col].dtype == 'object':
                 labels = df_numeric[col].unique().tolist()
@@ -84,10 +84,14 @@ def to_numeric(df, use_ordinal_encoder: bool = False, non_numeric_features: List
                 df_numeric.replace({col: mapping},inplace=True)
         return df_numeric
     else:
-        encoder = OrdinalEncoder()
-        encoder.fit(df_numeric[non_numeric_features])
+        encoder = ordinal_encoder
+        if fit_encoder:
+            encoder.fit(df_numeric[non_numeric_features])
+            df_numeric[non_numeric_features] = encoder.transform(df_numeric[non_numeric_features])    
+            return df_numeric, encoder
+
         df_numeric[non_numeric_features] = encoder.transform(df_numeric[non_numeric_features])    
-        return df_numeric, encoder
+        return df_numeric
 
 
 # Split CNTYFIPS and MSA columns into County and Area
@@ -142,7 +146,7 @@ def split_stratify(df, cols, train_frac, test_frac):
     train, test = [], []
     for combi in combinations:
         try:
-            binned_df = df.loc[(df[cols[0]] == combi[0]) & (df[cols[1]] == combi[1]) & (df[cols[2]] == combi[2])]
+            binned_df = df.loc[(df[cols[0]] == combi[0]) & (df[cols[1]] == combi[1]) & (df[cols[2]] == combi[2]) & (df[cols[3]] == combi[3])]
             train_sub,test_sub = train_test_split(binned_df,test_size=test_frac,train_size=train_frac,random_state=1)
             train.append(train_sub)
             test.append(test_sub)
@@ -154,36 +158,20 @@ def split_stratify(df, cols, train_frac, test_frac):
     # Return training df and test df
     return pd.concat(train, ignore_index=True), pd.concat(test, ignore_index=True)
 
-def get_train_test_val(df,cols,prop=0.20,train_prop=0.70,test_prop=0.25,val_prop=0.05):
-    cleaned_data, _ = split_stratify(df, cols, prop, 1.0-prop)
+def get_train_test_val(df, cols, prop=0.2, train_prop=0.7, test_prop=0.25, val_prop=0.05):
+    subset, _ = split_stratify(df, cols, prop, 1.0-prop)
     # get 75% for training (of subset)
-    cleaned_train, cleaned_rest = split_stratify(cleaned_data, cols, train_prop, (test_prop+val_prop))
+    train, rest = split_stratify(subset, cols, train_prop, (test_prop+val_prop))
     # get 83% for testing (results in 25% test and 5% val)
-    cleaned_test, cleaned_val = split_stratify(cleaned_rest, cols, round(test_prop/(test_prop+val_prop),3), round(val_prop/(test_prop+val_prop),3))
+    test, validation = split_stratify(rest, cols, round(test_prop/(test_prop+val_prop),3), round(val_prop/(test_prop+val_prop),3))
 
-    return cleaned_data,cleaned_train,cleaned_test,cleaned_val
+    return subset, train, test,validation
 
 # generate column that has binned age values
 def bin_age(data, age_col_name):
     df = data.copy()
-    bins = [0,2,14,18,22,30,40,50,60,70,80,100]
-    labels = ['0-2','3-14', '15-18', '19-22', '23-30', '30s','40s','50s','60s','70s','80+']
-    try:
-        # cannot cut the df if age_col contains non-numeric dtypes
-        binned_series = pd.cut(df[age_col_name], bins = bins, labels = labels)
-    except TypeError:
-        # replace 'Unknown' entries with age of 999
-        bins = [0,2,14,18,22,30,40,50,60,70,80,100,1000]
-        labels = ['0-2','3-14', '15-18', '19-22', '23-30', '30s','40s','50s','60s','70s','80+', 'Unknown']
-        df[age_col_name].replace(to_replace='Unknown', value = 999, inplace = True)
-        binned_series = pd.cut(df[age_col_name], bins = bins, labels = labels)
-    return binned_series.astype('string', copy=False)
-
-# other binning function
-def bin_age2(data, age_col_name):
-    df = data.copy()
-    bins = [-1,2,14,18,22,30,40,50,60,70,80,100,1000]
-    labels = ['0-2','3-14', '15-18', '19-22', '23-30', '30s','40s','50s','60s','70s','80+','999']
+    bins = [-1,11,14,17,21,24,29,34,39,49,64,100, 1000]
+    labels = ['0-11','12-14', '15-17', '18-21', '22-24', '25-29','30-34','35-39','40-49','50-64','65+', 'Unknown']
     df[age_col_name].replace(to_replace='Unknown', value = 999, inplace = True)
     binned_series = pd.cut(df[age_col_name], bins = bins, labels = labels)
     return binned_series.astype('string', copy=False)
