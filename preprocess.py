@@ -7,15 +7,15 @@ from sklearn.preprocessing import OrdinalEncoder
 from typing import List
 
 def clean_dataframe(df):
-    data = df.copy(deep=True)
-    solved, unsolved = split_solved(data)
+    original_data = df.copy(deep=True)
+    solved, unsolved = split_solved(original_data)
     data = remove_col(solved, ['Situation', 'Incident', 'Ori', 'StateName'])
+    data = split_filedate(data)
+    data = split_county_area(data)
     data = fill_unknown(data)
     data = delete_val(data, ['OffSex', 'OffRace', 'VicSex', 'VicRace'], ['Unknown', 'Unknown', 'Unknown', 'Unknown'])
     data = clean_unk(data)
     data = del_agentype(data, 'Agentype')
-    data = split_filedate(data)
-    data = split_county_area(data)
     return data
 
 
@@ -48,7 +48,7 @@ def clean_unk(df):
     df.loc[df['VicAge'] == 999, 'VicAge'] = 'Unknown'
     for col in df.columns:
         try:
-            df.loc[df[col].str.contains("unknown|undetermined|not specified|not reported|not determined",
+            df.loc[df[col].str.contains("unknown|undetermined|not specified|not reported|not determined|na|Not enough information to determine|^$",
                                         regex=True), col] = 'Unknown'
         except:
             continue
