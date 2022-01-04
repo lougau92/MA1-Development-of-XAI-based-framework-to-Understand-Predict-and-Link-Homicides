@@ -170,24 +170,8 @@ def get_train_test_val(df, cols, prop=0.2, train_prop=0.7, test_prop=0.25, val_p
 # generate column that has binned age values
 def bin_age(data, age_col_name):
     df = data.copy()
-    bins = [0,2,14,18,22,30,40,50,60,70,80,100]
-    labels = ['0-2','3-14', '15-18', '19-22', '23-30', '30s','40s','50s','60s','70s','80+']
-    try:
-        # cannot cut the df if age_col contains non-numeric dtypes
-        binned_series = pd.cut(df[age_col_name], bins = bins, labels = labels)
-    except TypeError:
-        # replace 'Unknown' entries with age of 999
-        bins = [0,2,14,18,22,30,40,50,60,70,80,100,1000]
-        labels = ['0-2','3-14', '15-18', '19-22', '23-30', '30s','40s','50s','60s','70s','80+', 'Unknown']
-        df[age_col_name].replace(to_replace='Unknown', value = 999, inplace = True)
-        binned_series = pd.cut(df[age_col_name], bins = bins, labels = labels)
-    return binned_series.astype('string', copy=False)
-
-# other binning function
-def bin_age2(data, age_col_name):
-    df = data.copy()
-    bins = [-1,2,14,18,22,30,40,50,60,70,80,100,1000]
-    labels = ['0-2','3-14', '15-18', '19-22', '23-30', '30s','40s','50s','60s','70s','80+','999']
+    bins = [-1,11,14,17,21,24,29,34,39,49,64,100, 1000]
+    labels = ['0-11','12-14', '15-17', '18-21', '22-24', '25-29','30-34','35-39','40-49','50-64','65+', 'Unknown']
     df[age_col_name].replace(to_replace='Unknown', value = 999, inplace = True)
     binned_series = pd.cut(df[age_col_name], bins = bins, labels = labels)
     return binned_series.astype('string', copy=False)
