@@ -48,7 +48,7 @@ def clean_unk(df):
     df.loc[df['VicAge'] == 999, 'VicAge'] = 'Unknown'
     for col in df.columns:
         try:
-            df.loc[df[col].str.contains("unknown|undetermined|not specified|not reported|not determined|na|Not enough information to determine|^$",
+            df.loc[df[col].str.contains("unknown|undetermined|not specified|not reported|not determined|^na\Z|Not enough information to determine|^$",
                                         regex=True), col] = 'Unknown'
         except:
             continue
