@@ -9,6 +9,8 @@ import plotly.figure_factory as ff
 import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
+import scipy
+import shap
 from typing import List, Dict
 from preprocess import clean_dataframe, to_numeric, bin_age, get_train_test_val
 
@@ -579,3 +581,39 @@ def plot_metrics(tree_names:List, tree_reports:List, predicted_feature:str):
                   yaxis_title="score values")
 
     return fig
+
+
+def shapley_custom_tree_model(fitted_tree:DecisionTreeClassifier, test_data:pd.DataFrame, input_features:List[str]) -> shap.TreeExplainer:
+
+    tree_dict = {
+    "children_left": fitted_tree.tree_.children_left,
+    "children_right": fitted_tree.tree_.children_right,
+    "children_default": fitted_tree.tree_.children_right, # because sklearn does not use missing values
+    "features": fitted_tree.tree_.feature,
+    "thresholds": fitted_tree.tree_.threshold,
+    "values": fitted_tree.tree_.value.reshape(fitted_tree.tree_.value.shape[0]*fitted_tree.tree_.value.shape[2], 1),
+    "node_sample_weight": fitted_tree.tree_.weighted_n_node_samples
+    }
+
+    custom_model = {
+    "trees": [tree_dict]
+    }
+
+    explainer = shap.TreeExplainer(custom_model)
+
+    X = test_data[input_features]
+
+    # Make sure that the ingested SHAP model (a TreeEnsemble object) makes the
+    # same predictions as the original model
+    # assert np.abs(explainer.model.predict(X) - fitted_tree.predict(X)).max() < 1e-4
+
+    # make sure the SHAP values sum up to the model output (this is the local accuracy property)
+    # assert np.abs(explainer.expected_value + explainer.shap_values(X).sum(1) - fitted_tree.predict(X)).max() < 1e-4
+
+    return explainer
+
+
+def waterfall_plot(shap_tree_model, sample):
+    shapley_value = shap_tree_model(sample)
+
+    shap.plots.waterfall(shap_tree_model.base_values[0], shapley_value, sample)
